@@ -1,0 +1,30 @@
+{
+  "name": "citara-attires",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "import-products": "tsx scripts/import-products.ts",
+    "predev": "npm run import-products",
+    "dev": "next dev",
+    "prebuild": "npm run import-products",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "framer-motion": "^12.43.0",
+    "next": "^16.4.2",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/node": "^22.20.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "sharp": "^0.35.5",
+    "tailwindcss": "^4.3.3",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3"
+  }
+}
