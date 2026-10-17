@@ -272,7 +272,7 @@ async function main() {
   if (!process.env.NEXT_PUBLIC_WHATSAPP_NUMBER)
     warnings.push("NEXT_PUBLIC_WHATSAPP_NUMBER is not set → using the default number from lib/site.ts");
   if (!process.env.NEXT_PUBLIC_SITE_URL)
-    warnings.push("NEXT_PUBLIC_SITE_URL is not set → product links fall back to the Vercel URL or localhost");
+    warnings.push("NEXT_PUBLIC_SITE_URL is not set → using https://citara-attires.vercel.app");
 
   if (errors.length) {
     console.log(`\n✖ ${errors.length} error(s):`);

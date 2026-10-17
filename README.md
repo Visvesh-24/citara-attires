@@ -21,7 +21,7 @@ npm run dev                  # http://localhost:3000
 | Variable | Example | Purpose |
 | --- | --- | --- |
 | `NEXT_PUBLIC_WHATSAPP_NUMBER` | `918778591551` | WhatsApp number in international format, **digits only, no `+`**. Defaults to +91 87785 91551 if not set |
-| `NEXT_PUBLIC_SITE_URL` | `https://citaraattires.com` | Public URL with no trailing slash. Used in WhatsApp messages, Open Graph tags and the sitemap |
+| `NEXT_PUBLIC_SITE_URL` | `https://citara-attires.vercel.app` | Public URL with no trailing slash. Used in WhatsApp messages, Open Graph tags and the sitemap. Defaults to https://citara-attires.vercel.app |
 
 Never commit `.env` or `.env.local`. They are already listed in `.gitignore`.
 
