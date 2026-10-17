@@ -20,7 +20,7 @@ npm run dev                  # http://localhost:3000
 
 | Variable | Example | Purpose |
 | --- | --- | --- |
-| `NEXT_PUBLIC_WHATSAPP_NUMBER` | `919876543210` | WhatsApp number in international format, **digits only, no `+`** |
+| `NEXT_PUBLIC_WHATSAPP_NUMBER` | `918778591551` | WhatsApp number in international format, **digits only, no `+`**. Defaults to +91 87785 91551 if not set |
 | `NEXT_PUBLIC_SITE_URL` | `https://citaraattires.com` | Public URL with no trailing slash. Used in WhatsApp messages, Open Graph tags and the sitemap |
 
 Never commit `.env` or `.env.local`. They are already listed in `.gitignore`.
@@ -30,7 +30,7 @@ Never commit `.env` or `.env.local`. They are already listed in `.gitignore`.
 1. Push this repo to GitHub.
 2. On [vercel.com](https://vercel.com): **Add New → Project**, then import the repository. Vercel detects Next.js automatically, so you can keep the default build settings.
 3. Under **Environment Variables**, add both variables for **Production** (and Preview if you like):
-   - `NEXT_PUBLIC_WHATSAPP_NUMBER` = your number, e.g. `919876543210`
+   - `NEXT_PUBLIC_WHATSAPP_NUMBER` = `918778591551` (optional; this is already the default)
    - `NEXT_PUBLIC_SITE_URL` = your final domain, e.g. `https://citaraattires.com`
 4. Click **Deploy**.
 5. Optional: add your own domain under **Settings → Domains**, then update `NEXT_PUBLIC_SITE_URL` to match and redeploy.

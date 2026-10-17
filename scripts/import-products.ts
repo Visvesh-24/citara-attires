@@ -270,7 +270,7 @@ async function main() {
   console.log(`Out of stock:     ${products.filter((p) => !p.inStock).length}`);
   console.log(`Missing images:   ${missingImageCount} file(s)${missingImageCount ? " → placeholders will be shown" : ""}`);
   if (!process.env.NEXT_PUBLIC_WHATSAPP_NUMBER)
-    warnings.push("NEXT_PUBLIC_WHATSAPP_NUMBER is not set → WhatsApp links will open without a recipient");
+    warnings.push("NEXT_PUBLIC_WHATSAPP_NUMBER is not set → using the default number from lib/site.ts");
   if (!process.env.NEXT_PUBLIC_SITE_URL)
     warnings.push("NEXT_PUBLIC_SITE_URL is not set → product links fall back to the Vercel URL or localhost");
 
