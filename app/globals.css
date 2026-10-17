@@ -1,0 +1,92 @@
+@import "tailwindcss";
+
+/* Brand tokens, sampled from the Citara logo: deep emerald + antique gold on ivory. */
+@theme {
+  --color-emerald-950: #0d2321;
+  --color-emerald-900: #143331;
+  --color-emerald-800: #1d4441; /* logo background */
+  --color-emerald-700: #285955;
+  --color-emerald-600: #3a716b;
+  --color-emerald-100: #dbe6e2;
+
+  --color-gold-300: #f0dca8;
+  --color-gold-400: #e7c97f;
+  --color-gold-500: #deba63; /* logo gold */
+  --color-gold-600: #c49a45;
+  --color-gold-700: #9a7631;
+
+  --color-ivory: #fbf7ef;
+  --color-sand: #f2eadb;
+  --color-sand-dark: #e6dac4;
+  --color-ink: #17201f;
+  --color-muted: #5f6b68;
+
+  --font-display: var(--font-cormorant), "Cormorant Garamond", Georgia, serif;
+  --font-sans: var(--font-jost), "Jost", system-ui, sans-serif;
+
+  --ease-luxe: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --animate-marquee: marquee 40s linear infinite;
+  --animate-spin-slow: spin 60s linear infinite;
+
+  @keyframes marquee {
+    from {
+      transform: translate3d(0, 0, 0);
+    }
+    to {
+      transform: translate3d(-50%, 0, 0);
+    }
+  }
+}
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-ivory text-ink font-sans antialiased;
+  }
+  ::selection {
+    @apply bg-gold-500 text-emerald-950;
+  }
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-gold-500;
+  }
+}
+
+@layer components {
+  .container-x {
+    @apply mx-auto w-full max-w-[1440px] px-5 sm:px-8 lg:px-12;
+  }
+  .eyebrow {
+    @apply font-sans text-[11px] font-medium tracking-[0.32em] uppercase;
+  }
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .animate-marquee,
+  .animate-spin-slow {
+    animation: none !important;
+  }
+}
+
+/* Dual-thumb price slider: two stacked range inputs, only the thumbs take pointer events. */
+.dual-range {
+  @apply pointer-events-none absolute inset-0 h-full w-full appearance-none bg-transparent;
+}
+.dual-range::-webkit-slider-thumb {
+  @apply pointer-events-auto size-5 cursor-grab appearance-none rounded-full border-2 border-ivory bg-emerald-800 shadow;
+}
+.dual-range::-moz-range-thumb {
+  @apply pointer-events-auto size-5 cursor-grab rounded-full border-2 border-ivory bg-emerald-800 shadow;
+}
