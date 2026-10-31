@@ -42,32 +42,45 @@ Never commit `.env` or `.env.local`. They are already listed in `.gitignore`.
 The single source of truth is **`data/products.csv`**:
 
 ```
-sku,name,category,price,sizes,colors,description,image_files,in_stock
+sku,name,category,Discount price,price,sizes,colors,description,image_files,in_stock
 ```
 
-- Values that can have more than one entry (`sizes`, `colors`, `image_files`) are separated by `|`, e.g. `S|M|L|XL`.
-- `category` must be one of **Kurtis**, **Tunics** or **Salwar Sets**.
-- `in_stock` is `yes` or `no`. A `no` product shows "Out of stock" instead of the WhatsApp button.
-- New arrivals: rows **lower down in the CSV count as newer**. The home page shows the last 8.
+- **`price`** is the original price (MRP). **`Discount price`** is optional: when it is lower, the site shows it as the selling price with the MRP struck through and a "% off" label. The WhatsApp message uses the selling price.
+- **`category`** must be one of **Kurtis**, **Tunics**, **Co-ord Sets** or **Salwar Sets**. Singular forms and small variations ("Co-ord set", "Salwar set") are accepted.
+- **`sizes`**, **`colors`** and **`image_files`** can be separated by `|`, commas or (for images) spaces. Stock counts written into sizes, like `M-2`, are removed automatically.
+- **`in_stock`** is `yes` or `no` (any capitalisation). A `no` product shows "Out of stock" instead of the WhatsApp button.
+- **`description`** is optional. If it's blank, the section is simply hidden.
+- **New arrivals:** rows **lower down in the CSV count as newer**. The home page shows the newest 8, mixed across categories.
+- **Colour variants:** products with the same design name in different colours (e.g. "Floral Cotton Tunic" in Red and Green) are linked on their product pages under "Also available in".
+- Each SKU should be unique. Names are shown in Title Case, and a few obvious typos are corrected for display (the import report lists them so you can fix the CSV too).
 
-`scripts/import-products.ts` (`npm run import-products`) converts the CSV into `data/generated/products.json`, generates URL slugs and prints a report:
+`scripts/import-products.ts` (`npm run import-products`) converts the CSV into `data/generated/products.json`, generates URL slugs, matches photos and prints a report:
 
-- **Errors** (row is skipped): duplicate SKU, missing or invalid price, category outside the 3 allowed, no sizes, missing name.
-- **Warnings** (row is kept): image files that don't exist in `public/products/`, missing colours or description.
+- **Errors** (row is skipped): missing or invalid price, category outside the 4 above, no sizes, missing name, exact duplicate rows.
+- **Fixes** (applied automatically): typos, photos matched by product code.
+- **Warnings** (row is kept): duplicate SKUs on different products, photos listed but not found, stock counts in sizes, missing description, unused photo files.
 
 Set `IMPORT_STRICT=1` to make the build fail on errors instead of skipping the rows.
 
-## Adding photos (no code changes needed)
+## Product photos
 
-| What | Where |
+Put photos in **`public/products/`**. Matching is forgiving, so the CSV doesn't need exact filenames:
+
+1. Names in `image_files` are matched while ignoring capitalisation, spaces, the extension and the macOS ` Small` suffix. For example, `CA-KRT-01-1.jpg` matches `CA-KRT-01-1 Small.jpeg`.
+2. Photos named after the product code are picked up automatically, even if `image_files` is empty. For SKU `CA-SWR-12-1`, that means `CA-SWR-12 Small.jpeg`, `CA-SWR-12-1 Small.jpeg`, `CA-SWR-12-2 …`.
+3. **`data/image-overrides.json`** pins photos where the CSV is ambiguous (two products sharing a SKU, or photo numbers that don't line up with the SKUs). It currently holds the matches I checked visually for the floral kurti sets and the two CA-TUN-14 tunics.
+4. Byte-identical copies (e.g. `CA-SWR-03-1(1) Small.jpeg`) are shown only once.
+
+The first photo is the main one: it's used for the product card, the WhatsApp/Open Graph preview and (for the first product in each category) the category tile. The second photo appears when hovering over a card. A product with no photo shows a branded placeholder, and missing photos never break the build.
+
+**Tip:** the current photos are 240×320px. Uploading larger originals (at least 900px wide, portrait 3:4) with the same filenames will make every page noticeably sharper, with no code changes.
+
+| Site photo | Where |
 | --- | --- |
-| Product photos | `public/products/<file named in image_files>` e.g. `public/products/CT-KRT-001-1.jpg` |
 | Home hero (left / mobile) | `public/hero/hero-1.jpg` |
 | Home hero (right, desktop) | `public/hero/hero-2.jpg` |
 | Brand story image | `public/hero/story.jpg` |
 | About page / story inset | `public/hero/about.jpg` |
-
-Any missing image is replaced by a branded placeholder, and missing images never break the build. Portrait photos (3:4) look best. The first image of each product is used for its card, the WhatsApp/Open Graph preview and (for the first product with a photo) its category tile. The second image appears when hovering over the card.
 
 ## Project structure
 

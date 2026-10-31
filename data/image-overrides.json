@@ -1,0 +1,10 @@
+{
+  "_readme": "Manual image assignments, used only where the CSV can't say which photo belongs to which product. Key: SKU, or 'SKU|Colour' when two CSV rows share a SKU. Value: image filenames in public/products/ (the ' Small' suffix and extension are optional), first = main photo. Each entry replaces the CSV image_files for that product. Verified visually against the photos.",
+  "CA-SWR-15-1|Sage Green": ["Ca-swr-15-1", "Ca-swr-15-2"],
+  "CA-SWR-15-1|Grey": [],
+  "CA-SWR-16-1": ["Ca-swr-17-1"],
+  "CA-SWR-17-1": ["Ca-swr-18-1"],
+  "CA-SWR-18-1": ["Ca-swr-19-1"],
+  "CA-TUN-14|Yellow": ["CA-TUN-14"],
+  "CA-TUN-14|Pink": ["CA-TUN-14(1)"]
+}

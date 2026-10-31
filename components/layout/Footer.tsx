@@ -11,7 +11,7 @@ export function Footer() {
         <div className="max-w-sm">
           <Logo size={56} />
           <p className="mt-6 text-sm leading-relaxed text-ivory/60">
-            Modern ethnic wear, rooted in tradition. Thoughtfully designed kurtis, tunics and salwar sets — made
+            Modern ethnic wear, rooted in tradition. Thoughtfully designed kurtis, tunics, co-ord sets and salwar sets — made
             with love in India.
           </p>
           <div className="mt-6 flex gap-3">

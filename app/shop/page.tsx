@@ -6,8 +6,8 @@ import { ShopClient, type ShopItem } from "@/components/shop/ShopClient";
 import { toCardProduct } from "@/components/product/ProductCard";
 
 export const metadata: Metadata = {
-  title: "Shop Kurtis, Tunics & Salwar Sets",
-  description: "Browse the full Citara Attires collection of kurtis, tunics and salwar sets. Order on WhatsApp.",
+  title: "Shop Kurtis, Tunics, Co-ord Sets & Salwar Sets",
+  description: "Browse the full Citara Attires collection of kurtis, tunics, co-ord sets and salwar sets. Order on WhatsApp.",
   alternates: { canonical: "/shop" },
 };
 

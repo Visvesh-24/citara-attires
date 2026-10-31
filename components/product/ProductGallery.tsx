@@ -6,7 +6,10 @@ import type { ImageRef } from "@/lib/products";
 import { SmartImage } from "../ui/SmartImage";
 import { ChevronIcon } from "../ui/Icons";
 
-/** Native scroll-snap carousel: swipeable on phones, arrows + thumbnails on larger screens. */
+/**
+ * Phones/tablets: native scroll-snap carousel (swipe, dots, arrows, thumbnails).
+ * Desktop: an editorial grid of all photos, which also keeps small source photos from being blown up too far.
+ */
 export function ProductGallery({ images, name, category }: { images: ImageRef[]; name: string; category: string }) {
   const trackRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(0);
@@ -26,6 +29,8 @@ export function ProductGallery({ images, name, category }: { images: ImageRef[];
 
   return (
     <div>
+      <DesktopGrid slides={slides} name={name} category={category} />
+      <div className="lg:hidden">
       <div className="group relative">
         <div
           ref={trackRef}
@@ -89,6 +94,33 @@ export function ProductGallery({ images, name, category }: { images: ImageRef[];
           ))}
         </div>
       )}
+      </div>
+    </div>
+  );
+}
+
+function DesktopGrid({ slides, name, category }: { slides: (ImageRef | null)[]; name: string; category: string }) {
+  const single = slides.length === 1;
+  return (
+    <div data-gallery className={`hidden gap-4 lg:grid ${single ? "" : "grid-cols-2"}`}>
+      {slides.map((img, i) => (
+        <div
+          key={i}
+          className={`group relative aspect-[3/4] overflow-hidden rounded-sm bg-sand ${
+            single ? "mx-auto w-full max-w-[460px]" : i === 0 && slides.length % 2 === 1 ? "col-span-2 mx-auto w-full max-w-[460px]" : ""
+          }`}
+        >
+          <div className="absolute inset-0 transition-transform duration-[1200ms] ease-[var(--ease-luxe)] group-hover:scale-105">
+            <SmartImage
+              image={img}
+              alt={`${name}${slides.length > 1 ? ` — photo ${i + 1}` : ""}`}
+              sizes="(min-width:1024px) 460px, 100vw"
+              priority={i === 0}
+              placeholderLabel={`${category} · photo coming soon`}
+            />
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

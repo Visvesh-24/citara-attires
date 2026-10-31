@@ -49,14 +49,14 @@ export function Header() {
           <nav className="container-x relative flex h-16 items-center justify-between text-ivory lg:h-20">
             <button
               onClick={() => setMenuOpen((o) => !o)}
-              className="-ml-2 p-2 lg:hidden"
+              className="-ml-2 p-2 xl:hidden"
               aria-label={menuOpen ? "Close menu" : "Open menu"}
               aria-expanded={menuOpen}
             >
               {menuOpen ? <CloseIcon /> : <MenuIcon />}
             </button>
 
-            <ul className="hidden items-center gap-9 lg:flex">
+            <ul className="hidden items-center gap-9 xl:flex">
               {CATEGORIES.map((c) => (
                 <li key={c}>
                   <NavLink href={shopHref(c)}>{c}</NavLink>
@@ -69,7 +69,7 @@ export function Header() {
             </div>
 
             <div className="flex items-center gap-6">
-              <div className="hidden items-center gap-9 lg:flex">
+              <div className="hidden items-center gap-9 xl:flex">
                 <NavLink href="/shop">Shop all</NavLink>
                 <NavLink href="/about">Our story</NavLink>
               </div>
@@ -112,7 +112,7 @@ function MobileMenu({ onClose }: { onClose: () => void }) {
   ];
   return (
     <motion.div
-      className="fixed inset-0 z-40 flex flex-col bg-emerald-900 pt-28 text-ivory lg:hidden"
+      className="fixed inset-0 z-40 flex flex-col bg-emerald-900 pt-28 text-ivory xl:hidden"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0, transition: { duration: 0.3 } }}

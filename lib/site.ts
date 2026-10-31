@@ -1,9 +1,11 @@
-export const CATEGORIES = ["Kurtis", "Tunics", "Salwar Sets"] as const;
+// Keep in sync with scripts/import-products.ts
+export const CATEGORIES = ["Kurtis", "Tunics", "Co-ord Sets", "Salwar Sets"] as const;
 export type Category = (typeof CATEGORIES)[number];
 
 export const CATEGORY_COPY: Record<Category, string> = {
   Kurtis: "Everyday grace, effortless drape",
   Tunics: "Light, breezy, made to move",
+  "Co-ord Sets": "Matching sets, effortlessly put together",
   "Salwar Sets": "Complete looks for every celebration",
 };
 
@@ -18,7 +20,7 @@ export const site = {
   name: "Citara Attires",
   tagline: "Modern ethnic wear, rooted in tradition",
   description:
-    "Citara Attires — kurtis, tunics and salwar sets that blend modern chic with timeless Indian tradition. Order easily on WhatsApp.",
+    "Citara Attires — kurtis, tunics, co-ord sets and salwar sets that blend modern chic with timeless Indian tradition. Order easily on WhatsApp.",
   url: siteUrl(),
   // NEXT_PUBLIC_WHATSAPP_NUMBER overrides the default business number (+91 87785 91551)
   whatsappNumber: (process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "918778591551").replace(/\D/g, ""),
