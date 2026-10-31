@@ -1,13 +1,15 @@
 import Link from "next/link";
 import type { Product } from "@/lib/products";
-import { formatPrice } from "@/lib/format";
+import { discountPercent } from "@/lib/format";
 import { SmartImage } from "../ui/SmartImage";
+import { Price } from "../ui/Price";
 
-export type CardProduct = Pick<Product, "slug" | "name" | "category" | "price" | "images" | "inStock">;
+export type CardProduct = Pick<Product, "slug" | "name" | "category" | "price" | "mrp" | "colors" | "images" | "inStock">;
 
 /** Portrait card. On hover the photo swaps to the product's second image (or zooms if there's only one). */
 export function ProductCard({ product, priority }: { product: CardProduct; priority?: boolean }) {
   const [first, second] = product.images;
+  const off = discountPercent(product.price, product.mrp);
   return (
     <Link href={`/product/${product.slug}`} className="group block">
       <div className="relative aspect-[3/4] overflow-hidden rounded-sm bg-sand">
@@ -29,6 +31,11 @@ export function ProductCard({ product, priority }: { product: CardProduct; prior
             <SmartImage image={{ src: second.src }} alt="" sizes="(min-width:1024px) 25vw, 50vw" />
           </div>
         )}
+        {product.inStock && off > 0 && (
+          <span className="absolute top-3 left-3 rounded-full bg-emerald-900/85 px-2.5 py-1 text-[10px] tracking-[0.12em] text-gold-300 backdrop-blur">
+            −{off}%
+          </span>
+        )}
         {!product.inStock && (
           <span className="absolute top-3 left-3 rounded-full bg-ivory/90 px-3 py-1 text-[10px] tracking-[0.2em] text-emerald-900 uppercase backdrop-blur">
             Sold out
@@ -39,9 +46,12 @@ export function ProductCard({ product, priority }: { product: CardProduct; prior
         </span>
       </div>
       <div className="mt-4 flex flex-col gap-1">
-        <p className="text-[10px] tracking-[0.25em] text-gold-700 uppercase">{product.category}</p>
+        <p className="truncate text-[10px] tracking-[0.25em] text-gold-700 uppercase">
+          {product.category}
+          {product.colors[0] && <span className="text-muted"> · {product.colors[0]}</span>}
+        </p>
         <h3 className="font-display text-xl leading-tight text-emerald-950 lg:text-[22px]">{product.name}</h3>
-        <p className="text-sm text-muted">{formatPrice(product.price)}</p>
+        <Price price={product.price} mrp={product.mrp} />
       </div>
     </Link>
   );
@@ -52,6 +62,8 @@ export const toCardProduct = (p: Product): CardProduct => ({
   name: p.name,
   category: p.category,
   price: p.price,
+  mrp: p.mrp,
+  colors: p.colors.slice(0, 1),
   inStock: p.inStock,
   // the hover image never needs a blur placeholder, so drop it to keep payloads small
   images: p.images.slice(0, 2).map((img, i) => (i === 0 ? img : { src: img.src })),

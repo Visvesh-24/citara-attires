@@ -73,7 +73,7 @@ export function Hero({ primary, secondary }: { primary: ImageRef | null; seconda
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.9, delay: 1.3, ease }}
         >
-          Kurtis, tunics and salwar sets that carry the grace of Indian craft — reimagined with a modern, effortless
+          Kurtis, tunics, co-ords and salwar sets that carry the grace of Indian craft — reimagined with a modern, effortless
           silhouette.
         </motion.p>
 

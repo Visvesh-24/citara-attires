@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getProduct, products, relatedProducts } from "@/lib/products";
+import { getProduct, products, relatedProducts, type Product } from "@/lib/products";
 import { formatPrice } from "@/lib/format";
 import { shopHref, site } from "@/lib/site";
 import { productUrl } from "@/lib/whatsapp";
@@ -18,6 +18,10 @@ export function generateStaticParams() {
   return products.map((p) => ({ slug: p.slug }));
 }
 
+/** CSV descriptions are optional; fall back to the facts we do have. */
+const describe = (p: Product) =>
+  p.description || `${p.name}${p.colors[0] ? ` in ${p.colors[0].toLowerCase()}` : ""} from the Citara Attires ${p.category.toLowerCase()} collection.`;
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const product = getProduct((await params).slug);
   if (!product) return {};
@@ -25,15 +29,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const image = product.images[0]?.src ?? "/logo.png";
   return {
     title,
-    description: product.description,
+    description: describe(product),
     alternates: { canonical: `/product/${product.slug}` },
     openGraph: {
       title: `${title} | ${site.name}`,
-      description: product.description,
+      description: describe(product),
       url: `/product/${product.slug}`,
       images: [{ url: image, alt: product.name }],
     },
-    twitter: { card: "summary_large_image", title, description: product.description, images: [image] },
+    twitter: { card: "summary_large_image", title, description: describe(product), images: [image] },
     other: {
       "product:price:amount": String(product.price),
       "product:price:currency": "INR",
@@ -52,7 +56,7 @@ export default async function ProductPage({ params }: Props) {
     "@type": "Product",
     name: product.name,
     sku: product.sku,
-    description: product.description,
+    description: describe(product),
     category: product.category,
     image: product.images.map((i) => `${site.url}${i.src}`),
     brand: { "@type": "Brand", name: site.name },
@@ -76,10 +80,10 @@ export default async function ProductPage({ params }: Props) {
         </nav>
 
         <div className="grid gap-10 lg:grid-cols-[1.15fr_1fr] lg:gap-20">
-          <Reveal y={20} className="lg:sticky lg:top-28 lg:self-start">
+          <Reveal y={20}>
             <ProductGallery images={product.images} name={product.name} category={product.category} />
           </Reveal>
-          <Reveal y={20} delay={0.1} className="lg:py-4">
+          <Reveal y={20} delay={0.1} className="lg:sticky lg:top-28 lg:self-start lg:py-4">
             <ProductDetails product={product} />
           </Reveal>
         </div>

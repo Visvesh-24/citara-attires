@@ -4,7 +4,7 @@ import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { CATEGORIES, CATEGORY_COPY, type Category } from "@/lib/site";
-import { formatPrice } from "@/lib/format";
+import { discountPercent, formatPrice } from "@/lib/format";
 import { ProductCard, type CardProduct } from "../product/ProductCard";
 import { CloseIcon, FilterIcon, SearchIcon } from "../ui/Icons";
 
@@ -17,6 +17,7 @@ const SORTS = {
   newest: "Newest",
   "price-asc": "Price: low to high",
   "price-desc": "Price: high to low",
+  discount: "Biggest discount",
   name: "Name A–Z",
 } as const;
 type SortKey = keyof typeof SORTS;
@@ -91,10 +92,16 @@ export function ShopClient({
     if (sort === "newest") sorted.sort((a, b) => b.index - a.index);
     if (sort === "price-asc") sorted.sort((a, b) => a.price - b.price);
     if (sort === "price-desc") sorted.sort((a, b) => b.price - a.price);
+    if (sort === "discount") sorted.sort((a, b) => discountPercent(b.price, b.mrp) - discountPercent(a.price, a.mrp));
     if (sort === "name") sorted.sort((a, b) => a.name.localeCompare(b.name));
     // in-stock pieces first, keeping the chosen order otherwise
     return sorted.sort((a, b) => Number(b.inStock) - Number(a.inStock));
   }, [items, category, sizes, price, deferredQuery, sort]);
+
+  const counts = useMemo(
+    () => Object.fromEntries(CATEGORIES.map((c) => [c, items.filter((p) => p.category === c).length])),
+    [items],
+  );
 
   const activeFilterCount = sizes.length + (price[0] !== priceBounds[0] || price[1] !== priceBounds[1] ? 1 : 0);
 
@@ -127,7 +134,7 @@ export function ShopClient({
           </motion.h1>
         </AnimatePresence>
         <p className="mt-3 max-w-md text-sm text-muted">
-          {category ? CATEGORY_COPY[category] : "Kurtis, tunics and salwar sets — modern silhouettes, timeless craft."}
+          {category ? CATEGORY_COPY[category] : "Kurtis, tunics, co-ord sets and salwar sets — modern silhouettes, timeless craft."}
         </p>
 
         <div className="no-scrollbar -mx-5 mt-8 flex gap-2 overflow-x-auto px-5 sm:mx-0 sm:px-0">
@@ -148,7 +155,12 @@ export function ShopClient({
                     transition={{ type: "spring", stiffness: 400, damping: 35 }}
                   />
                 )}
-                <span className="relative">{c ?? "All"}</span>
+                <span className="relative">
+                  {c ?? "All"}
+                  <span className={`ml-1.5 text-[10px] ${active ? "text-gold-300" : "text-muted"}`}>
+                    {c ? counts[c] : items.length}
+                  </span>
+                </span>
               </button>
             );
           })}
@@ -156,8 +168,8 @@ export function ShopClient({
       </div>
 
       {/* Toolbar */}
-      <div className="sticky top-16 z-20 -mx-5 flex items-center gap-2 border-b border-gold-500/20 bg-ivory/90 px-5 py-3 backdrop-blur-xl sm:mx-0 sm:gap-3 sm:px-0 lg:top-20">
-        <label className="relative flex-1">
+      <div className="sticky top-16 z-20 -mx-5 flex flex-wrap items-center gap-2 border-b border-gold-500/20 bg-ivory/90 px-5 py-3 backdrop-blur-xl sm:mx-0 sm:gap-3 sm:px-0 lg:top-20">
+        <label className="relative basis-full sm:basis-0 sm:flex-1">
           <span className="sr-only">Search products</span>
           <SearchIcon className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-muted" />
           <input
@@ -170,22 +182,22 @@ export function ShopClient({
         </label>
         <button
           onClick={() => setDrawerOpen(true)}
-          className="relative flex h-11 items-center gap-2 rounded-full border border-emerald-900/15 px-4 text-[12px] tracking-[0.14em] text-emerald-900 uppercase lg:hidden"
+          className="relative flex h-11 flex-1 items-center justify-center gap-2 rounded-full border border-emerald-900/15 px-4 text-[12px] tracking-[0.14em] text-emerald-900 uppercase sm:flex-none lg:hidden"
         >
           <FilterIcon className="size-4" />
-          <span className="max-sm:sr-only">Filters</span>
+          <span>Filters</span>
           {activeFilterCount > 0 && (
             <span className="grid size-5 place-items-center rounded-full bg-gold-500 text-[10px] text-emerald-950">
               {activeFilterCount}
             </span>
           )}
         </button>
-        <label className="relative">
+        <label className="relative flex-1 sm:flex-none">
           <span className="sr-only">Sort by</span>
           <select
             value={sort}
             onChange={(e) => setSort(e.target.value as SortKey)}
-            className="h-11 max-w-[8.5rem] appearance-none rounded-full border border-emerald-900/15 bg-ivory px-4 text-[12px] tracking-[0.08em] text-emerald-900 focus:border-emerald-800 focus:outline-none sm:max-w-none sm:pr-10"
+            className="h-11 w-full appearance-none rounded-full border border-emerald-900/15 bg-ivory px-4 text-[12px] tracking-[0.08em] text-emerald-900 focus:border-emerald-800 focus:outline-none sm:max-w-none sm:pr-10"
           >
             {Object.entries(SORTS).map(([key, label]) => (
               <option key={key} value={key}>

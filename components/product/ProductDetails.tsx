@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { motion, useAnimationControls } from "framer-motion";
 import type { Product } from "@/lib/products";
 import { formatPrice } from "@/lib/format";
+import { Price } from "../ui/Price";
 import { productEnquiryLink } from "@/lib/whatsapp";
 import { WhatsAppIcon } from "../ui/Icons";
 
@@ -30,11 +31,7 @@ export function ProductDetails({ product }: { product: Product }) {
       <h1 className="mt-3 font-display text-[clamp(2.4rem,5vw,3.75rem)] leading-[1] font-light text-emerald-950">
         {product.name}
       </h1>
-      <div className="mt-4 flex items-baseline gap-3">
-        <p className="text-2xl text-emerald-900">{formatPrice(product.price)}</p>
-        <p className="text-xs text-muted">Inclusive of all taxes</p>
-      </div>
-      <p className="mt-1 text-[11px] tracking-[0.15em] text-muted uppercase">SKU {product.sku}</p>
+      <Price price={product.price} mrp={product.mrp} size="lg" className="mt-4" />
 
       <div className="my-8 h-px bg-gold-500/25" />
 
@@ -96,10 +93,26 @@ export function ProductDetails({ product }: { product: Product }) {
       </p>
 
       <div className="mt-10 space-y-6 border-t border-gold-500/25 pt-8">
-        <div>
-          <h2 className="text-[12px] tracking-[0.2em] text-emerald-900 uppercase">Description</h2>
-          <p className="mt-3 text-[15px] leading-relaxed text-muted">{product.description}</p>
-        </div>
+        {product.description && (
+          <div>
+            <h2 className="text-[12px] tracking-[0.2em] text-emerald-900 uppercase">Description</h2>
+            <p className="mt-3 text-[15px] leading-relaxed text-muted">{product.description}</p>
+          </div>
+        )}
+        <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-[15px]">
+          <dt className="text-muted">Category</dt>
+          <dd className="text-emerald-900">{product.category}</dd>
+          {product.colors.length > 0 && (
+            <>
+              <dt className="text-muted">Colour</dt>
+              <dd className="text-emerald-900">{product.colors.join(", ")}</dd>
+            </>
+          )}
+          <dt className="text-muted">Sizes</dt>
+          <dd className="text-emerald-900">{product.sizes.join(", ")}</dd>
+          <dt className="text-muted">SKU</dt>
+          <dd className="text-emerald-900">{product.sku}</dd>
+        </dl>
         <div>
           <h2 className="text-[12px] tracking-[0.2em] text-emerald-900 uppercase">How to order</h2>
           <ol className="mt-3 list-inside list-decimal space-y-1 text-[15px] text-muted">
