@@ -68,7 +68,7 @@ Put photos in **`public/products-large/`** (preferred) or **`public/products/`**
 
 1. Names in `image_files` are matched while ignoring capitalisation, spaces, the extension and the macOS ` Large`/` Small` suffix. For example, `CA-KRT-01-1.jpg` matches `CA-KRT-01-1 Large.jpeg`.
 2. Photos named after the product code are picked up automatically, even if `image_files` is empty. For SKU `CA-SWR-12-1`, that means `CA-SWR-12 Large.jpeg`, `CA-SWR-12-1 Large.jpeg`, `CA-SWR-12-2 …`.
-3. **`data/image-overrides.json`** pins photos where the CSV is ambiguous (two products sharing a SKU, or photo numbers that don't line up with the SKUs). It currently holds the matches I checked visually for the floral kurti sets and the two CA-TUN-14 tunics.
+3. **`data/image-overrides.json`** pins photos where the CSV is ambiguous (two products sharing a SKU, or photo numbers that don't line up with the SKUs). It currently holds the matches I checked visually for the floral kurti sets.
 4. Byte-identical copies (e.g. `CA-SWR-03-1(1) Large.jpeg`) are shown only once.
 
 The first photo is the main one: it's used for the product card, the WhatsApp/Open Graph preview and (for the first product in each category) the category tile. The second photo appears when hovering over a card. A product with no photo shows a branded placeholder, and missing photos never break the build. Portrait photos (3:4) at least 900px wide look best; the current large photos are 960×1280.
