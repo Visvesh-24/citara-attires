@@ -8,7 +8,7 @@ import { ChevronIcon } from "../ui/Icons";
 
 /**
  * Phones/tablets: native scroll-snap carousel (swipe, dots, arrows, thumbnails).
- * Desktop: an editorial grid of all photos, which also keeps small source photos from being blown up too far.
+ * Desktop: an editorial grid — a large lead photo when the count is odd, the rest two-up.
  */
 export function ProductGallery({ images, name, category }: { images: ImageRef[]; name: string; category: string }) {
   const trackRef = useRef<HTMLDivElement>(null);
@@ -107,14 +107,14 @@ function DesktopGrid({ slides, name, category }: { slides: (ImageRef | null)[]; 
         <div
           key={i}
           className={`group relative aspect-[3/4] overflow-hidden rounded-sm bg-sand ${
-            single ? "mx-auto w-full max-w-[460px]" : i === 0 && slides.length % 2 === 1 ? "col-span-2 mx-auto w-full max-w-[460px]" : ""
+            !single && i === 0 && slides.length % 2 === 1 ? "col-span-2" : ""
           }`}
         >
           <div className="absolute inset-0 transition-transform duration-[1200ms] ease-[var(--ease-luxe)] group-hover:scale-105">
             <SmartImage
               image={img}
               alt={`${name}${slides.length > 1 ? ` — photo ${i + 1}` : ""}`}
-              sizes="(min-width:1024px) 460px, 100vw"
+              sizes={single || (i === 0 && slides.length % 2 === 1) ? "(min-width:1024px) 50vw, 100vw" : "(min-width:1024px) 25vw, 50vw"}
               priority={i === 0}
               placeholderLabel={`${category} · photo coming soon`}
             />

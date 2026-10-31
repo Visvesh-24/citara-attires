@@ -18,8 +18,6 @@ export type Product = {
   description: string;
   images: ImageRef[];
   inStock: boolean;
-  /** Products that are the same design in another colour share a group. */
-  group?: string;
 };
 
 export const products = productsJson as Product[];
@@ -51,14 +49,10 @@ export const categoryCover = (category: Category) =>
 export const categoryCounts = () =>
   CATEGORIES.map((c) => ({ category: c, count: productsIn(c).length }));
 
-/** The same design in other colours. */
-export const colourSiblings = (product: Product) =>
-  product.group ? products.filter((p) => p.group === product.group && p.slug !== product.slug) : [];
-
-/** Same category, preferring other designs (colour siblings are shown separately) and pieces with photos. */
+/** Same category, preferring pieces with photos. */
 export function relatedProducts(product: Product, count = 4) {
   return products
-    .filter((p) => p.category === product.category && p.slug !== product.slug && (!p.group || p.group !== product.group))
+    .filter((p) => p.category === product.category && p.slug !== product.slug)
     .sort((a, b) => Number(b.images.length > 0) - Number(a.images.length > 0))
     .slice(0, count);
 }

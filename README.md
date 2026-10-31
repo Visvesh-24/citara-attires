@@ -51,7 +51,7 @@ sku,name,category,Discount price,price,sizes,colors,description,image_files,in_s
 - **`in_stock`** is `yes` or `no` (any capitalisation). A `no` product shows "Out of stock" instead of the WhatsApp button.
 - **`description`** is optional. If it's blank, the section is simply hidden.
 - **New arrivals:** rows **lower down in the CSV count as newer**. The home page shows the newest 8, mixed across categories.
-- **Colour variants:** products with the same design name in different colours (e.g. "Floral Cotton Tunic" in Red and Green) are linked on their product pages under "Also available in".
+- **Colours:** each colour of a design is its own row and its own product, with its own photos and page. A row with **no photo** whose design is also listed in other colours that do have photos (e.g. a "Grey Floral Kurti Set" next to the photographed Sage, Violet and Turquoise sets) is treated as an umbrella listing and left off the site. The import report names it.
 - Each SKU should be unique. Names are shown in Title Case, and a few obvious typos are corrected for display (the import report lists them so you can fix the CSV too).
 
 `scripts/import-products.ts` (`npm run import-products`) converts the CSV into `data/generated/products.json`, generates URL slugs, matches photos and prints a report:
@@ -64,16 +64,14 @@ Set `IMPORT_STRICT=1` to make the build fail on errors instead of skipping the r
 
 ## Product photos
 
-Put photos in **`public/products/`**. Matching is forgiving, so the CSV doesn't need exact filenames:
+Put photos in **`public/products-large/`** (preferred) or **`public/products/`**. If the same photo exists in both, the large one is used. Matching is forgiving, so the CSV doesn't need exact filenames:
 
-1. Names in `image_files` are matched while ignoring capitalisation, spaces, the extension and the macOS ` Small` suffix. For example, `CA-KRT-01-1.jpg` matches `CA-KRT-01-1 Small.jpeg`.
-2. Photos named after the product code are picked up automatically, even if `image_files` is empty. For SKU `CA-SWR-12-1`, that means `CA-SWR-12 Small.jpeg`, `CA-SWR-12-1 Small.jpeg`, `CA-SWR-12-2 …`.
+1. Names in `image_files` are matched while ignoring capitalisation, spaces, the extension and the macOS ` Large`/` Small` suffix. For example, `CA-KRT-01-1.jpg` matches `CA-KRT-01-1 Large.jpeg`.
+2. Photos named after the product code are picked up automatically, even if `image_files` is empty. For SKU `CA-SWR-12-1`, that means `CA-SWR-12 Large.jpeg`, `CA-SWR-12-1 Large.jpeg`, `CA-SWR-12-2 …`.
 3. **`data/image-overrides.json`** pins photos where the CSV is ambiguous (two products sharing a SKU, or photo numbers that don't line up with the SKUs). It currently holds the matches I checked visually for the floral kurti sets and the two CA-TUN-14 tunics.
-4. Byte-identical copies (e.g. `CA-SWR-03-1(1) Small.jpeg`) are shown only once.
+4. Byte-identical copies (e.g. `CA-SWR-03-1(1) Large.jpeg`) are shown only once.
 
-The first photo is the main one: it's used for the product card, the WhatsApp/Open Graph preview and (for the first product in each category) the category tile. The second photo appears when hovering over a card. A product with no photo shows a branded placeholder, and missing photos never break the build.
-
-**Tip:** the current photos are 240×320px. Uploading larger originals (at least 900px wide, portrait 3:4) with the same filenames will make every page noticeably sharper, with no code changes.
+The first photo is the main one: it's used for the product card, the WhatsApp/Open Graph preview and (for the first product in each category) the category tile. The second photo appears when hovering over a card. A product with no photo shows a branded placeholder, and missing photos never break the build. Portrait photos (3:4) at least 900px wide look best; the current large photos are 960×1280.
 
 | Site photo | Where |
 | --- | --- |

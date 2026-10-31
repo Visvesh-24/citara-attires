@@ -8,8 +8,10 @@
  *  - blank rows are ignored; header names are case/space-insensitive
  *  - sizes/colours/images may be separated by "|", "," or spaces; stock counts like "M-2" are stripped
  *  - category names are normalised ("Co-ord set" → "Co-ord Sets")
- *  - image names are matched loosely: extension, case, spaces and the macOS " Small" suffix are ignored,
- *    and photos named after the product code (e.g. "CA-SWR-12 Small.jpeg") are picked up automatically.
+ *  - photos come from public/products-large/ (preferred) and public/products/ (fallback for anything
+ *    without a large version); names are matched loosely: extension, case, spaces and the macOS
+ *    " Small"/" Large" suffixes are ignored, and photos named after the product code
+ *    (e.g. "CA-SWR-12 Large.jpeg") are picked up automatically.
  *    data/image-overrides.json pins photos where the CSV is ambiguous.
  *
  * Rows with real errors (missing price, unknown category...) are skipped and reported.
@@ -26,7 +28,9 @@ loadEnvConfig(ROOT); // read .env / .env.local like Next.js does
 const CSV_PATH = path.join(ROOT, "data", "products.csv");
 const OVERRIDES_PATH = path.join(ROOT, "data", "image-overrides.json");
 const OUT_DIR = path.join(ROOT, "data", "generated");
-const PRODUCTS_DIR = path.join(ROOT, "public", "products");
+const PUBLIC_DIR = path.join(ROOT, "public");
+// Photo folders inside public/, best first: the same photo in a later folder is only used if missing earlier.
+const PRODUCT_DIRS = ["products-large", "products"];
 const HERO_DIR = path.join(ROOT, "public", "hero");
 
 // Keep in sync with lib/site.ts
@@ -77,7 +81,6 @@ type Product = {
   description: string;
   images: ImageRef[];
   inStock: boolean;
-  group?: string; // same design in other colours shares a group
 };
 
 // ---------- tiny RFC 4180 CSV parser (handles quotes, commas and newlines in fields) ----------
@@ -195,12 +198,12 @@ const parseMoney = (raw: string) => {
 };
 
 // ---------- image matching ----------
-/** "CA-KRT-01-1 Small.jpeg", "ca-krt-01-1.jpg", "CA-KRT-01-1" → "ca-krt-01-1" */
+/** "CA-KRT-01-1 Large.jpeg", "CA-KRT-01-1 Small.jpeg", "ca-krt-01-1.jpg" → "ca-krt-01-1" */
 function imageKey(name: string) {
   let base = squash(name).toLowerCase();
   const ext = path.extname(base);
   if (IMAGE_EXTENSIONS.includes(ext)) base = base.slice(0, -ext.length);
-  return base.replace(/[\s_-]*small$/, "").replace(/\s+/g, "");
+  return base.replace(/[\s_-]*(small|large)$/, "").replace(/\s+/g, "");
 }
 
 /** "CA-SWR-03-1" → "ca-swr-03": the design code shared by all photos of a product. */
@@ -209,6 +212,7 @@ const productCode = (sku: string) => sku.toLowerCase().split("-").slice(0, 3).jo
 /** Natural order: "x-12" < "x-12-1" < "x-12-1(1)" < "x-12-2". */
 const naturalCompare = (a: string, b: string) => a.localeCompare(b, undefined, { numeric: true });
 
+/** file: path inside public/, e.g. "products-large/CA-KRT-01-1 Large.jpeg" */
 type ImageFile = { file: string; key: string; hash: string; width?: number };
 
 // ---------- optional blur placeholders + dimensions (uses sharp when available) ----------
@@ -266,15 +270,19 @@ async function main() {
   const discountCol = ["discount_price", "sale_price", "offer_price"].find((c) => header.includes(c));
   const col = (r: string[], name: string | undefined) => (name ? squash(r[header.indexOf(name)] ?? "") : "");
 
-  // Index every photo in public/products/
+  // Index every photo, preferring the large version of each
   const files: ImageFile[] = [];
-  if (fs.existsSync(PRODUCTS_DIR)) {
-    for (const file of fs.readdirSync(PRODUCTS_DIR).sort(naturalCompare)) {
-      if (!IMAGE_EXTENSIONS.includes(path.extname(file).toLowerCase())) continue;
-      const abs = path.join(PRODUCTS_DIR, file);
+  for (const dir of PRODUCT_DIRS) {
+    const absDir = path.join(PUBLIC_DIR, dir);
+    if (!fs.existsSync(absDir)) continue;
+    for (const name of fs.readdirSync(absDir).sort(naturalCompare)) {
+      if (!IMAGE_EXTENSIONS.includes(path.extname(name).toLowerCase())) continue;
+      const key = imageKey(name);
+      if (files.some((f) => f.key === key)) continue; // a better version was already found
+      const abs = path.join(absDir, name);
       files.push({
-        file,
-        key: imageKey(file),
+        file: `${dir}/${name}`,
+        key,
         hash: crypto.createHash("md5").update(fs.readFileSync(abs)).digest("hex"),
         width: await widthOf(abs),
       });
@@ -290,7 +298,7 @@ async function main() {
   const overriddenKeys = new Set(Object.values(overrides).flat().map(imageKey));
   const usedOverrides = new Set<string>();
 
-  type Draft = Omit<Product, "slug" | "images" | "group"> & { line: number; imageTokens: string[] };
+  type Draft = Omit<Product, "slug" | "images"> & { line: number; imageTokens: string[] };
   const drafts: Draft[] = [];
   let blankRows = 0;
 
@@ -357,9 +365,9 @@ async function main() {
     const imageTokens = col(r, "image_files")
       .split(/[|,\s]+/)
       .filter(Boolean)
-      // re-join names that were split on the space before "Small" ("CA-KRT-01-1 Small.jpeg")
+      // re-join names that were split on the space before "Small"/"Large" ("CA-KRT-01-1 Small.jpeg")
       .reduce<string[]>((acc, t) => {
-        if (/^small(\.\w+)?$/i.test(t) && acc.length) acc[acc.length - 1] += ` ${t}`;
+        if (/^(small|large)(\.\w+)?$/i.test(t) && acc.length) acc[acc.length - 1] += ` ${t}`;
         else acc.push(t);
         return acc;
       }, []);
@@ -396,10 +404,6 @@ async function main() {
       errors.push(`line ${d.line} (${d.sku}): exact duplicate of line ${twin.line} → row skipped`);
       continue;
     }
-    if (same[0] === d)
-      warnings.push(
-        `${d.sku} is used by ${same.length} different products (lines ${same.map((s) => s.line).join(", ")}) → all kept; give each a unique SKU`,
-      );
     kept.push(d);
   }
 
@@ -423,7 +427,7 @@ async function main() {
       for (const name of overrides[overrideKey]) {
         const f = fileByKey.get(imageKey(name));
         if (f) add(f);
-        else warnings.push(`${where}: image-overrides.json names "${name}", which isn't in public/products/`);
+        else warnings.push(`${where}: image-overrides.json names "${name}", which isn't in public/products-large/ or public/products/`);
       }
     } else {
       for (const token of d.imageTokens) {
@@ -431,7 +435,7 @@ async function main() {
         if (f && !overriddenKeys.has(f.key)) add(f);
         else if (!f) warnings.push(`${where}: image not found: ${token}`);
       }
-      // Pick up photos named after the design code ("CA-SWR-12 Small.jpeg", "CA-SWR-03-1(1) Small.jpeg"),
+      // Pick up photos named after the design code ("CA-SWR-12 Large.jpeg", "CA-SWR-03-1(1) Large.jpeg"),
       // unless several products share that code, which would make the match a guess.
       const code = productCode(d.sku);
       if (codeCount.get(code) === 1) {
@@ -444,7 +448,6 @@ async function main() {
       }
     }
     picked.forEach((p) => usedFiles.add(p.file));
-    if (!picked.length) warnings.push(`${where}: no photo found → placeholder shown`);
 
     // Same name in several colours → every one of them gets the colour in its URL.
     let slug = slugify(d.name) || slugify(d.sku);
@@ -455,21 +458,39 @@ async function main() {
 
     const images: ImageRef[] = [];
     for (const p of picked) {
-      images.push({ src: `/products/${encodeURIComponent(p.file)}`, blur: await blurFor(path.join(PRODUCTS_DIR, p.file)) });
+      const [dir, name] = [path.dirname(p.file), path.basename(p.file)];
+      images.push({ src: `/${dir}/${encodeURIComponent(name)}`, blur: await blurFor(path.join(PUBLIC_DIR, p.file)) });
     }
 
     const { line: _line, imageTokens: _tokens, ...rest } = d;
     products.push({ ...rest, slug, images });
   }
 
-  // Same design in other colours: name minus its colour words, e.g. "Sage Green Floral Kurti Set" → "floral kurti set".
-  const groupKey = (p: Product) => {
+  // A row with no photo of its own, whose design is also listed in other colours that do have photos,
+  // is an umbrella listing (e.g. "Grey Floral Kurti Set" next to the photographed Sage, Violet and
+  // Turquoise sets). Each colour is its own product, so the umbrella row is left off the site.
+  // Design = name minus its colour words: "Sage Green Floral Kurti Set" → "floral kurti set".
+  const designKey = (p: Product) => {
     const colourWords = new Set(p.colors.join(" ").toLowerCase().split(/\s+/));
     return p.category + ":" + p.name.toLowerCase().split(/\s+/).filter((w) => !colourWords.has(w)).join(" ");
   };
-  const groups = new Map<string, Product[]>();
-  for (const p of products) groups.set(groupKey(p), [...(groups.get(groupKey(p)) ?? []), p]);
-  for (const [key, members] of groups) if (members.length > 1) members.forEach((p) => (p.group = slugify(key)));
+  const umbrellas = products.filter(
+    (p) => !p.images.length && products.some((o) => o !== p && o.images.length && designKey(o) === designKey(p)),
+  );
+  for (const p of umbrellas) {
+    const others = products.filter((o) => o !== p && o.images.length && designKey(o) === designKey(p));
+    fixes.push(
+      `${p.sku} "${p.name}": no photo of its own; the design is listed separately as ${others.map((o) => o.colors[0] ?? o.name).join(", ")} → not shown`,
+    );
+    products.splice(products.indexOf(p), 1);
+  }
+
+  for (const p of products) if (!p.images.length) warnings.push(`${p.sku} "${p.name}": no photo found → placeholder shown`);
+  const skuCount = new Map<string, Product[]>();
+  for (const p of products) skuCount.set(p.sku, [...(skuCount.get(p.sku) ?? []), p]);
+  for (const [sku, list] of skuCount)
+    if (list.length > 1)
+      warnings.push(`${sku} is used by ${list.length} different products (${list.map((p) => p.name).join(" / ")}) → all shown; give each a unique SKU`);
 
   for (const key of Object.keys(overrides))
     if (!usedOverrides.has(key)) warnings.push(`image-overrides.json: "${key}" doesn't match any product`);
@@ -477,7 +498,7 @@ async function main() {
   const unused = files.filter((f) => !usedFiles.has(f.file));
   const duplicatesOfUsed = unused.filter((f) => files.some((u) => usedFiles.has(u.file) && u.hash === f.hash));
   const orphans = unused.filter((f) => !duplicatesOfUsed.includes(f));
-  orphans.forEach((f) => warnings.push(`public/products/${f.file} isn't used by any product`));
+  orphans.forEach((f) => warnings.push(`public/${f.file} isn't used by any product`));
   const lowRes = files.filter((f) => f.width && f.width < 600);
 
   // Hero / story photos: optional, placeholder design when missing.

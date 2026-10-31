@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { colourSiblings, getProduct, products, relatedProducts, type Product } from "@/lib/products";
+import { getProduct, products, relatedProducts, type Product } from "@/lib/products";
 import { formatPrice } from "@/lib/format";
 import { shopHref, site } from "@/lib/site";
 import { productUrl } from "@/lib/whatsapp";
@@ -50,11 +50,6 @@ export default async function ProductPage({ params }: Props) {
   const product = getProduct((await params).slug);
   if (!product) notFound();
   const related = relatedProducts(product);
-  const siblings = colourSiblings(product).map((s) => ({
-    slug: s.slug,
-    colour: s.colors[0] ?? s.name,
-    image: s.images[0]?.src,
-  }));
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -89,7 +84,7 @@ export default async function ProductPage({ params }: Props) {
             <ProductGallery images={product.images} name={product.name} category={product.category} />
           </Reveal>
           <Reveal y={20} delay={0.1} className="lg:sticky lg:top-28 lg:self-start lg:py-4">
-            <ProductDetails product={product} siblings={siblings} />
+            <ProductDetails product={product} />
           </Reveal>
         </div>
       </div>
